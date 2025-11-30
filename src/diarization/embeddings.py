@@ -5,24 +5,25 @@ This module handles the loading of the ONNX-based speaker recognition model,
 preprocessing of audio (Log-Mel Spectrograms), and extraction of embeddings
 from speech segments.
 """
+
 from typing import List
 
-import ipdb
+import librosa
 import numpy as np
 import onnxruntime as ort
 import torch
-import librosa
 
-from diarization.data_structures import SpeechSegment, SegmentEmbedding
+from diarization.data_structures import (NumpyVector, SegmentEmbedding,
+                                         SpeechSegment)
 
 
 def compute_logmel_spectrogram(
-        waveform: torch.Tensor,
-        sample_rate: int = 16000,
-        n_mels: int = 80,
-        win_length: int = 400,  # 25 ms @ 16kHz
-        hop_length: int = 160,  # 10 ms @ 16kHz
-        n_fft: int = 400,
+    waveform: torch.Tensor,
+    sample_rate: int = 16000,
+    n_mels: int = 80,
+    win_length: int = 400,  # 25 ms @ 16kHz
+    hop_length: int = 160,  # 10 ms @ 16kHz
+    n_fft: int = 400,
 ) -> torch.Tensor:
     """
     Compute log-Mel filterbanks compatible with SpeechBrain ECAPA preprocessing.
@@ -88,11 +89,9 @@ class ECAPAOnnxEmbeddingModel:
     ----------
     model_path : str
         Path to the ONNX model file.
-    device : str, optional
-        Computation device ('cpu' or 'cuda'). Default is "cpu".
     """
 
-    def __init__(self, model_path: str, device: str = "cpu"):
+    def __init__(self, model_path: str):
         providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
         self.session = ort.InferenceSession(model_path, providers=providers)
 
@@ -100,12 +99,12 @@ class ECAPAOnnxEmbeddingModel:
         self.output_name = self.session.get_outputs()[0].name
 
     def _window_segment(
-            self,
-            waveform: torch.Tensor,
-            sr: int,
-            segment: SpeechSegment,
-            window: float = 1.5,
-            step: float = 0.75
+        self,
+        waveform: torch.Tensor,
+        sr: int,
+        segment: SpeechSegment,
+        window: float = 1.5,
+        step: float = 0.75,
     ) -> List[torch.Tensor]:
         """
         Slice the waveform segment into overlapping chunks.
@@ -142,38 +141,35 @@ class ECAPAOnnxEmbeddingModel:
 
         chunks = []
         for i in range(0, len(seg_wave) - window_len + 1, step_len):
-            chunk = seg_wave[i:i + window_len]
+            chunk = seg_wave[i : i + window_len]
             chunks.append(chunk)
 
         return chunks
 
     def embed_segment(
-            self,
-            waveform: torch.Tensor,
-            sr: int,
-            segment: SpeechSegment
-    ) -> np.ndarray:
+        self, waveform: torch.Tensor, sr: int, segment: SpeechSegment
+    ) -> NumpyVector:
         """
-           Compute the averaged speaker embedding for a single segment.
+        Compute the averaged speaker embedding for a single segment.
 
-           The segment is split into windows, and an embedding is computed for each
-           window. The final embedding is the mean of these window embeddings,
-           normalized to unit length.
+        The segment is split into windows, and an embedding is computed for each
+        window. The final embedding is the mean of these window embeddings,
+        normalized to unit length.
 
-           Parameters
-           ----------
-           waveform : torch.Tensor
-               The complete audio waveform.
-           sr : int
-               Sample rate of the audio.
-           segment : SpeechSegment
-               The speech segment to process.
+        Parameters
+        ----------
+        waveform : torch.Tensor
+            The complete audio waveform.
+        sr : int
+            Sample rate of the audio.
+        segment : SpeechSegment
+            The speech segment to process.
 
-           Returns
-           -------
-           np.ndarray
-               The normalized speaker embedding vector.
-           """
+        Returns
+        -------
+        np.ndarray
+            The normalized speaker embedding vector.
+        """
         windows = self._window_segment(waveform, sr, segment)
         all_embs = []
 
@@ -185,10 +181,9 @@ class ECAPAOnnxEmbeddingModel:
             x = log_mel.transpose(0, 1).unsqueeze(0).numpy().astype("float32")
             # # now: (1, T, 80)
 
-            out = self.session.run(
-                [self.output_name],
-                {self.input_name: x}
-            )[0]  # shape (1, emb_dim)
+            out = self.session.run([self.output_name], {self.input_name: x})[
+                0
+            ]  # shape (1, emb_dim)
 
             all_embs.append(out[0])
 
@@ -198,28 +193,28 @@ class ECAPAOnnxEmbeddingModel:
         return emb
 
     def embed_segments(
-            self,
-            waveform: torch.Tensor,
-            sr: int,
-            segments: List[SpeechSegment],
+        self,
+        waveform: torch.Tensor,
+        sr: int,
+        segments: List[SpeechSegment],
     ) -> List[SegmentEmbedding]:
         """
-       Compute speaker embeddings for a list of speech segments.
+        Compute speaker embeddings for a list of speech segments.
 
-       Parameters
-       ----------
-       waveform : torch.Tensor
-           The complete audio waveform.
-       sr : int
-           Sample rate of the audio.
-       segments : List[SpeechSegment]
-           A list of speech segments.
+        Parameters
+        ----------
+        waveform : torch.Tensor
+            The complete audio waveform.
+        sr : int
+            Sample rate of the audio.
+        segments : List[SpeechSegment]
+            A list of speech segments.
 
-       Returns
-       -------
-       List[SegmentEmbedding]
-           A list containing the original segments and their computed embeddings.
-    """
+        Returns
+        -------
+        List[SegmentEmbedding]
+            A list containing the original segments and their computed embeddings.
+        """
         result = []
         for seg in segments:
             emb = self.embed_segment(waveform, sr, seg)

@@ -53,14 +53,14 @@ The pipeline processes audio in five sequential steps:
 ### Prerequisites
 Install the dependencies:
 
-````bash 
+````bash
 pip install -e .
 ````
 
 ### Running the Diarization
 Use the CLI script to process an audio file:
 
-````bash 
+````bash
 python scripts/diarize.py data/short_mulan.wav
 --model-path models/embedding_model.onnx
 --num-speakers 2

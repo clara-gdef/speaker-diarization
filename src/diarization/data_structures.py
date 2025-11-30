@@ -1,7 +1,12 @@
 from dataclasses import dataclass
-from typing import List, Dict, Any, Tuple
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
+from numpy.typing import NDArray
+
+NumpyVector = NDArray[np.float32]
+LabeledSegmentType = Tuple[float, float, str]
+
 
 @dataclass
 class SpeechSegment:
@@ -15,6 +20,7 @@ class SpeechSegment:
     end : float
         End time of the segment in seconds.
     """
+
     start: float
     end: float
 
@@ -31,29 +37,31 @@ class SegmentEmbedding:
     embedding : np.ndarray
         The computed speaker embedding vector. Shape is (embedding_dim,).
     """
+
     segment: SpeechSegment
-    embedding: np.ndarray  # shape (embedding_dim,)
+    embedding: NumpyVector
 
 
 @dataclass
 class LabeledSegment:
     """
-        A speech segment with an assigned speaker label.
+    A speech segment with an assigned speaker label.
 
-        Parameters
-        ----------
-        start : float
-            Start time of the segment in seconds.
-        end : float
-            End time of the segment in seconds.
-        speaker : str
-            The assigned speaker identifier (e.g., "speaker_0").
-        """
+    Parameters
+    ----------
+    start : float
+        Start time of the segment in seconds.
+    end : float
+        End time of the segment in seconds.
+    speaker : str
+        The assigned speaker identifier (e.g., "speaker_0").
+    """
+
     start: float
     end: float
     speaker: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[float, str]]:
         """
         Convert this LabeledSegment object into a JSON-friendly dict,
         rounding timestamps to 3 decimals.
@@ -65,21 +73,25 @@ class LabeledSegment:
         }
 
     @staticmethod
-    def list_to_dict(segments: List["LabeledSegment"]) -> List[Dict[str, Tuple[float, float, str]]]:
+    def list_to_dict(
+        segments: List["LabeledSegment"],
+    ) -> list[dict[str, Union[float, str]]]:
         """
         Convert a list of LabeledSegment objects into a list of JSON-friendly dicts.
         """
         return [seg.to_dict() for seg in segments]
 
     @staticmethod
-    def from_dict(data: Dict[str, Tuple[float, float, str]]) -> "LabeledSegment":
+    def from_dict(data: Dict[str, LabeledSegmentType]) -> "LabeledSegment":
         """
         Load a LabeledSegment object from a JSON dict.
         """
         return LabeledSegment(**data)
 
     @staticmethod
-    def list_from_dict(list_data: List[Dict[str, Tuple[float, float, str]]]) -> List["LabeledSegment"]:
+    def list_from_dict(
+        list_data: List[Dict[str, LabeledSegmentType]]
+    ) -> List["LabeledSegment"]:
         """
         Convert a list of dicts into a list of LabeledSegment objects.
         """

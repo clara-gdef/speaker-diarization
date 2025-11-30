@@ -5,33 +5,33 @@ This module provides the entry point for running the diarization process
 from the console. It parses arguments, initializes the pipeline, runs it
 on the provided audio file, and outputs the results as JSON.
 """
+
 import argparse
 import json
-import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from diarization.data_structures import LabeledSegment
-from diarization.pipeline import DiarizationPipeline, DiarizationConfig
+from diarization.pipeline import DiarizationConfig, DiarizationPipeline
 
 
-def main(args):
+def main(args: Any) -> None:
     """
-       Execute the diarization pipeline with command-line arguments.
+    Execute the diarization pipeline with command-line arguments.
 
-       Configures the pipeline based on the provided arguments, processes the audio,
-       and prints or saves the resulting diarization in JSON format.
+    Configures the pipeline based on the provided arguments, processes the audio,
+    and prints or saves the resulting diarization in JSON format.
 
-       Parameters
-       ----------
-       args : argparse.Namespace
-           Parsed command-line arguments containing:
-           - audio: Path to input audio file.
-           - model_path: Path to ONNX model.
-           - num_speakers: Number of speakers to detect.
-           - vad_thresh: Energy threshold for VAD.
-           - output: Output file path or "-" for stdout.
-       """
+    Parameters
+    ----------
+    args : argparse.Namespace
+        Parsed command-line arguments containing:
+        - audio: Path to input audio file.
+        - model_path: Path to ONNX model.
+        - num_speakers: Number of speakers to detect.
+        - vad_thresh: Energy threshold for VAD.
+        - output: Output file path or "-" for stdout.
+    """
     config = DiarizationConfig(
         model_path=args.model_path,
         num_speakers=args.num_speakers,
@@ -65,7 +65,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Minimal speaker diarization pipeline using SpeechBrain ECAPA model exported to ONNX."
+        description="Minimal speaker diarization pipeline using ECAPA ONNX."
     )
 
     parser.add_argument(

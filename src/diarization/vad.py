@@ -1,46 +1,46 @@
 from typing import List
 
-import ipdb
 import torch
 
 from .data_structures import SpeechSegment
 
+
 def energy_vad(
-        waveform: torch.Tensor,
-        sample_rate: int,
-        frame_size: float = 0.025,
-        frame_shift: float = 0.01,
-        energy_thresh: float = 0.05,
-        min_speech_duration: float = 0.0,
+    waveform: torch.Tensor,
+    sample_rate: int,
+    frame_size: float = 0.025,
+    frame_shift: float = 0.01,
+    energy_thresh: float = 0.05,
+    min_speech_duration: float = 0.0,
 ) -> List[SpeechSegment]:
     """
-   Perform simple energy-based Voice Activity Detection (VAD).
+    Perform simple energy-based Voice Activity Detection (VAD).
 
-   Calculates frame-wise energy, normalizes it by the maximum energy in the
-   clip, and thresholds it to detect speech regions.
+    Calculates frame-wise energy, normalizes it by the maximum energy in the
+    clip, and thresholds it to detect speech regions.
 
-   Parameters
-   ----------
-   waveform : torch.Tensor
-       The input audio waveform (1D tensor).
-   sample_rate : int
-       The sample rate of the audio in Hz.
-   frame_size : float, optional
-       Duration of each frame in seconds. Default is 0.025.
-   frame_shift : float, optional
-       Shift between consecutive frames in seconds. Default is 0.01.
-   energy_thresh : float, optional
-       Normalized energy threshold (0.0 to 1.0) for speech detection.
-       Frames with energy ratio >= this value are considered speech. Default is 0.5.
-   min_speech_duration : float, optional
-       Minimum required duration in seconds for a speech segment to be valid.
-       Default is 0.3.
+    Parameters
+    ----------
+    waveform : torch.Tensor
+        The input audio waveform (1D tensor).
+    sample_rate : int
+        The sample rate of the audio in Hz.
+    frame_size : float, optional
+        Duration of each frame in seconds. Default is 0.025.
+    frame_shift : float, optional
+        Shift between consecutive frames in seconds. Default is 0.01.
+    energy_thresh : float, optional
+        Normalized energy threshold (0.0 to 1.0) for speech detection.
+        Frames with energy ratio >= this value are considered speech. Default is 0.5.
+    min_speech_duration : float, optional
+        Minimum required duration in seconds for a speech segment to be valid.
+        Default is 0.3.
 
-   Returns
-   -------
-   List[SpeechSegment]
-       A list of detected speech segments with start and end timestamps.
-   """
+    Returns
+    -------
+    List[SpeechSegment]
+        A list of detected speech segments with start and end timestamps.
+    """
 
     assert waveform.ndim == 1
     waveform = waveform.float()

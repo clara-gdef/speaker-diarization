@@ -1,7 +1,7 @@
 import argparse
 import json
 from pathlib import Path
-from typing import List, Tuple, Any
+from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -48,34 +48,34 @@ def main(args: argparse.Namespace) -> None:
 
 
 def plot_diarization_waveform(
-        waveform: torch.Tensor,
-        sr: int,
-        segments: List[LabeledSegment],
-        title: str = "Speaker Diarization",
-        figsize: Tuple[float, float] = (16, 4)
+    waveform: torch.Tensor,
+    sr: int,
+    segments: List[LabeledSegment],
+    title: str = "Speaker Diarization",
+    figsize: Tuple[float, float] = (16, 4),
 ) -> Figure:
     """
-       Plot waveform + diarization segments.
+    Plot waveform + diarization segments.
 
-       Parameters
-       ----------
-       waveform : Any
-           The audio waveform. Can be a numpy array or a torch Tensor.
-           If it's a 2D array, the first channel is used.
-       sr : int
-           Sample rate of the audio.
-       segments : List[LabeledSegment]
-           List of segments with speaker labels to visualize.
-       title : str, optional
-           The title of the plot. Default is "Speaker Diarization".
-       figsize : Tuple[float, float], optional
-           The size of the figure (width, height). Default is (16, 4).
+    Parameters
+    ----------
+    waveform : Any
+        The audio waveform. Can be a numpy array or a torch Tensor.
+        If it's a 2D array, the first channel is used.
+    sr : int
+        Sample rate of the audio.
+    segments : List[LabeledSegment]
+        List of segments with speaker labels to visualize.
+    title : str, optional
+        The title of the plot. Default is "Speaker Diarization".
+    figsize : Tuple[float, float], optional
+        The size of the figure (width, height). Default is (16, 4).
 
-       Returns
-       -------
-       matplotlib.figure.Figure
-           The created matplotlib figure.
-       """
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The created matplotlib figure.
+    """
 
     waveform = waveform.numpy()
 
@@ -96,6 +96,7 @@ def plot_diarization_waveform(
 
     # Assign colors per speaker
     import matplotlib.cm as cm
+
     speaker_ids = [seg.speaker for seg in segments]
     unique_speakers = sorted(set(speaker_ids))
     colors = {s: cm.tab10(i % 10) for i, s in enumerate(unique_speakers)}
@@ -110,7 +111,7 @@ def plot_diarization_waveform(
                 2.2,
                 color=colors[spk],
                 alpha=0.3,
-                label=spk  # assign speaker directly
+                label=spk,  # assign speaker directly
             )
         )
 

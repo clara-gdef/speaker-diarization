@@ -1,17 +1,17 @@
+import argparse
 import os
 from pathlib import Path
 
 import numpy as np
+import onnxruntime as ort
 import torch
 from speechbrain.inference.speaker import SpeakerRecognition
 from torch import nn
-import argparse
-import onnxruntime as ort
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def export_ecapa_onnx(onnx_dir, onnx_name):
+def export_ecapa_onnx(onnx_dir: str, onnx_name: str) -> None:
     print("📥 Chargement du modèle SpeechBrain ECAPA-TDNN...")
     sr = SpeakerRecognition.from_hparams(
         source="speechbrain/spkrec-ecapa-voxceleb",
@@ -37,12 +37,12 @@ def export_ecapa_onnx(onnx_dir, onnx_name):
         dynamic_axes={
             "fbank": {1: "frames"},  # variable length time frames
         },
-        opset_version=13
+        opset_version=13,
     )
 
     print(f"✅ Export finished, model exported at {output_path}")
 
-    ## sanity check
+    # sanity check
 
     sess = ort.InferenceSession(output_path)
     inp = sess.get_inputs()[0].name
@@ -55,28 +55,14 @@ def export_ecapa_onnx(onnx_dir, onnx_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Prepare the speaker recognition model for the diarization pipeline."
+        description="Export the speaker recognition model for the diarization pipeline."
     )
-    parser.add_argument(
-        "--onnx_dir",
-        type=str,
-        default="models/onnx"
-    )
-    parser.add_argument(
-        "--ckpt_name",
-        type=str,
-        default="embedding_model.ckpt"
-    )
-    parser.add_argument(
-        "--onnx_name",
-        type=str,
-        default="embedding_model.onnx"
-    )
+    parser.add_argument("--onnx_dir", type=str, default="models/onnx")
+    parser.add_argument("--ckpt_name", type=str, default="embedding_model.ckpt")
+    parser.add_argument("--onnx_name", type=str, default="embedding_model.onnx")
 
     args = parser.parse_args()
 
     os.makedirs(args.onnx_dir, exist_ok=True)
 
-    export_ecapa_onnx(args.onnx_dir,
-                      args.onnx_name
-                      )
+    export_ecapa_onnx(args.onnx_dir, args.onnx_name)

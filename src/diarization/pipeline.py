@@ -4,56 +4,60 @@ Core pipeline orchestration.
 This module brings together audio loading, VAD, embedding extraction, and
 clustering to perform speaker diarization.
 """
+
 from dataclasses import dataclass
 from typing import List
 
+import librosa
 import numpy as np
 import torch
-import librosa
 
-from diarization.vad import energy_vad
-from diarization.embeddings import ECAPAOnnxEmbeddingModel
-from diarization.clustering import cluster_embeddings, assign_speakers
+from diarization.clustering import assign_speakers, cluster_embeddings
 from diarization.data_structures import LabeledSegment, SpeechSegment
+from diarization.embeddings import ECAPAOnnxEmbeddingModel
+from diarization.vad import energy_vad
 
 TARGET_SAMPLE_RATE = 16000
 NUM_CHANNELS = 1
 
+
 @dataclass
 class DiarizationConfig:
     """
-        Configuration for the speaker diarization pipeline.
+    Configuration for the speaker diarization pipeline.
 
-        Parameters
-        ----------
-        model_path : str
-            Path to the ONNX-exported speaker embedding model file.
-        num_speakers : int
-            The expected number of speakers to cluster.
-        vad_energy_thresh : float, optional
-            Energy threshold for Voice Activity Detection (0.0 to 1.0).
-            Default is 0.05.
-        """
+    Parameters
+    ----------
+    model_path : str
+        Path to the ONNX-exported speaker embedding model file.
+    num_speakers : int
+        The expected number of speakers to cluster.
+    vad_energy_thresh : float, optional
+        Energy threshold for Voice Activity Detection (0.0 to 1.0).
+        Default is 0.05.
+    """
+
     model_path: str
     num_speakers: int
     vad_energy_thresh: float
 
+
 class DiarizationPipeline:
     """
-        Main class for executing the speaker diarization workflow.
+    Main class for executing the speaker diarization workflow.
 
-        This pipeline coordinates the following steps:
-        1. Loading and preprocessing audio.
-        2. Voice Activity Detection (VAD) to isolate speech segments.
-        3. Extraction of speaker embeddings for each segment.
-        4. Clustering embeddings to identify distinct speakers.
-        5. Assigning speaker labels to the original segments.
+    This pipeline coordinates the following steps:
+    1. Loading and preprocessing audio.
+    2. Voice Activity Detection (VAD) to isolate speech segments.
+    3. Extraction of speaker embeddings for each segment.
+    4. Clustering embeddings to identify distinct speakers.
+    5. Assigning speaker labels to the original segments.
 
-        Parameters
-        ----------
-        config : DiarizationConfig
-            Configuration object containing model paths and parameters.
-        """
+    Parameters
+    ----------
+    config : DiarizationConfig
+        Configuration object containing model paths and parameters.
+    """
 
     def __init__(self, config: DiarizationConfig):
         self.config = config
@@ -61,25 +65,23 @@ class DiarizationPipeline:
 
     def run(self, audio_path: str) -> List[LabeledSegment]:
         """
-                Execute the full diarization pipeline on an audio file.
+        Execute the full diarization pipeline on an audio file.
 
-                Parameters
-                ----------
-                audio_path : str
-                    Path to the input WAV audio file.
+        Parameters
+        ----------
+        audio_path : str
+            Path to the input WAV audio file.
 
-                Returns
-                -------
-                List[LabeledSegment]
-                    A list of temporal segments with assigned speaker labels.
-                    Returns an empty list if no speech is detected.
-                """
+        Returns
+        -------
+        List[LabeledSegment]
+            A list of temporal segments with assigned speaker labels.
+            Returns an empty list if no speech is detected.
+        """
         waveform, sr = load_audio(audio_path)
 
         speech_segments: List[SpeechSegment] = energy_vad(
-            waveform,
-            sr,
-            energy_thresh=self.config.vad_energy_thresh
+            waveform, sr, energy_thresh=self.config.vad_energy_thresh
         )
 
         if not speech_segments:
