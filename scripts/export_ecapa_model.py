@@ -57,8 +57,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Export the speaker recognition model for the diarization pipeline."
     )
-    parser.add_argument("--onnx_dir", type=str, default="models/onnx")
-    parser.add_argument("--ckpt_name", type=str, default="embedding_model.ckpt")
+    parser.add_argument("--onnx_dir", type=str, default="models")
     parser.add_argument("--onnx_name", type=str, default="embedding_model.onnx")
 
     args = parser.parse_args()
