@@ -1,0 +1,28 @@
+[project]
+name = "diarization"
+version = "0.1.0"
+dependencies = [
+    "numpy>=1.23",
+    "librosa>=0.10",
+    "torch==1.13.1",
+    "torchaudio==0.13.1",
+    "speechbrain>=1.0.0,<2.0.0",
+    "onnxruntime>=1.16.0",
+    "scikit-learn>=1.2",
+
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
+    "ipdb"
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
