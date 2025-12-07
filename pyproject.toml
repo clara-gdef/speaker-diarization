@@ -16,6 +16,7 @@ dev = [
     "ipdb",
     "matplotlib>=3.6,<4.0",
 ]
+quantize = ["psutil"]
 
 [build-system]
 requires = ["setuptools"]

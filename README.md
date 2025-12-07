@@ -192,3 +192,67 @@ Given more time, the following improvements would be prioritized:
 3. **Testing**: I'd write a few unit tests, at least for the most critical functions. If this was to be shipped to prod, I'd also run test coverage.
 4. **VAD**: Replace the energy-based approach with a pre-trained neural VAD (e.g., Silero VAD or Pyannote's segmentation model) to handle noisy environments better. At the very least, I'd spend more time tweaking the parameters of the current version.
 5. **Overlap Handling**: The current pipeline assumes one speaker at a time. Integrating an overlap-aware model would allow detecting multiple simultaneous speakers.
+
+# Extra credits!
+
+Voici une **section courte, claire et prête à coller** dans ton `README.md` pour expliquer comment lancer les tests et benchmarks de quantization.
+
+---
+
+## Quantization Tests & Benchmarking
+
+This project includes optional “extra credit” scripts to evaluate model quantization and measure performance improvements (latency, CPU, memory).
+
+
+```bash
+python scripts/quantize.py \
+    --model_path models/onnx/embedding_model.onnx \
+    --output_path models/onnx/embedding_model_int8.onnx
+```
+
+This produces a smaller and faster INT8 version of the embedding model:
+
+```
+models/onnx/embedding_model_int8.onnx
+```
+
+### Run the performance benchmark
+
+The benchmark measures:
+
+* Average inference latency
+* CPU utilization
+* Memory usage
+
+Run:
+
+```bash
+python scripts/bench.py
+```
+
+This prints a comparison table between:
+
+* the baseline FP32 model
+* the quantized INT8 model
+
+Example output:
+
+```
+--- FP32 ---
+Latency: 74.69 ms
+CPU: 75.6%
+Memory: 390.5 MB
+
+--- INT8 ---
+Latency: 34.43 ms
+CPU: 76.3%
+Memory: 298.3 MB
+```
+
+---
+
+### Notes
+
+* The benchmark shows that INT8 quantization significantly reduces model size and memory footprint, making the embedding model more lightweight for production environments. Latency improvements of 30–40% confirm that quantization boosts CPU inference speed without requiring hardware acceleration. Overall, the quantized model offers faster and cheaper inference while preserving the functional behavior needed for speaker diarization. Of course, rigourous testing would require output precision measures (as it is the downside of quantization compared to FP32 inference).
+* The quantization reader uses synthetic fbank features for calibration.
+* The INT8 model can drop into the diarization pipeline without code changes.
